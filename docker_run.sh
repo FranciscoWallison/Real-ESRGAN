@@ -5,5 +5,4 @@ docker run --rm -it \
   --volume $HOME/Pictures/results:/app/results \
   --volume ./gfpgan/weights/:/app/weights/ \
   --volume ./pretrained_models:/app/experiments/pretrained_models \
-  akitaonrails/real-esrgan:latest \
-  $@
+  akitaonrails/real-esrgan:latest $@
