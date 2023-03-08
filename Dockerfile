@@ -26,13 +26,17 @@ RUN wget https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-li
     # basicsr facexlib
     python3 -m pip install --upgrade pip && \
     pip3 install --no-cache-dir torch>=1.13 opencv-python>=4.7 && \
-    pip3 install --no-cache-dir basicsr facexlib realesrgan
+    pip3 install --no-cache-dir basicsr facexlib realesrgan && \
+    pip3 install --no-cache-dir gfpgan && \
+    python3 setup.py develop
+
 
 # weights
-RUN mkdir -p /app/experiments/pretrained_models 
+RUN mkdir -p /experiments/pretrained_models
 #RUN wget https://github.com/TencentARC/GFPGAN/releases/download/v0.2.0/GFPGANCleanv1-NoCE-C2.pth \
 #        -P experiments/pretrained_models &&\
 #    wget https://github.com/TencentARC/GFPGAN/releases/download/v0.1.0/GFPGANv1.pth \
 #        -P experiments/pretrained_models
 
-CMD ["python3", "inference_realesrgan.py", "-i", "/app/inputs", "-o", "/app/results", "-n", ""]
+# CMD ["python3", "inference_realesrgan.py", "-i", "/inputs", "-o", "/results", "-n", ""]
+CMD [ "bash" ]
