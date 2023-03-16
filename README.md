@@ -8,6 +8,8 @@ I didn't find a good Dockerfile, so I got one from [adryanfrois](https://github.
 python3 inference_realesrgan.py -n RealESRGAN_x4plus.pth -i inputs --fp32
 ````
 
+### Exemplos
+
 ![teste1](https://user-images.githubusercontent.com/19413241/223596149-57d5fc83-f88f-487a-b9ae-db0c326a3f5f.png)
 
 
