@@ -160,6 +160,14 @@ def main():
             else:
                 save_path = os.path.join(args.output, f'{imgname}_{args.suffix}.{extension}')
             cv2.imwrite(save_path, output)
+            # Abrir a imagem
+            img_oud = cv2.imread(path)
+            img_new = cv2.imread(save_path)
+
+            # Obter a largura e a altura da imagem
+            altura, largura, canais = img_oud.shape
+            nova_imagem = cv2.resize(img_new, (largura, altura))
+            cv2.imwrite(save_path, nova_imagem)
 
 
 if __name__ == '__main__':
