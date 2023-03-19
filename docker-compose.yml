@@ -9,6 +9,16 @@ services:
     container_name: config_img
     restart: always
     tty: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    # environment:
+    #   - NVIDIA_VISIBLE_DEVICES=all
+    # command: nvidia-smi
     ports:
       - "3333:3333"
     volumes:

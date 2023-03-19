@@ -8,7 +8,6 @@ from basicsr.utils.download_util import load_file_from_url
 from realesrgan import RealESRGANer
 from realesrgan.archs.srvgg_arch import SRVGGNetCompact
 
-
 def main():
     """Inference demo for Real-ESRGAN.
     """
@@ -118,7 +117,7 @@ def main():
     if args.face_enhance:  # Use GFPGAN for face enhancement
         from gfpgan import GFPGANer
         face_enhancer = GFPGANer(
-            model_path='https://github.com/TencentARC/GFPGAN/releases/download/v1.3.8/GFPGANv1.3.pth',
+            model_path='https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/GFPGANv1.3.pth',
             upscale=args.outscale,
             arch='clean',
             channel_multiplier=2,

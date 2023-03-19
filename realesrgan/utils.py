@@ -8,6 +8,7 @@ import torch
 from basicsr.utils.download_util import load_file_from_url
 from torch.nn import functional as F
 
+
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -62,12 +63,22 @@ class RealESRGANer():
                     url=model_path, model_dir=os.path.join(ROOT_DIR, 'weights'), progress=True, file_name=None)
             loadnet = torch.load(model_path, map_location=torch.device('cpu'))
 
+        ## Debugar - testar
+        # print(type(loadnet))
+        # for idx, lt in enumerate(loadnet):
+        #     print("idx: ", idx )
+        #     print("loadnet: ", lt )
+
         # prefer to use params_ema
         if 'params_ema' in loadnet:
             keyname = 'params_ema'
         else:
             keyname = 'params'
-        model.load_state_dict(loadnet[keyname], strict=True)
+
+        try:
+            model.load_state_dict(loadnet[keyname], strict=True)
+        except KeyError:
+            model.load_state_dict(loadnet, strict=True)
 
         model.eval()
         self.model = model.to(self.device)
