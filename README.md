@@ -10,6 +10,9 @@ python3 inference_realesrgan.py -n RealESRGAN_x4plus.pth -i inputs --fp32
 
 ### Exemplos
 
+![image](https://user-images.githubusercontent.com/19413241/226325893-c0a1d3ef-0bde-421c-9ec6-4df5b2547281.png)
+
+
 ![teste1](https://user-images.githubusercontent.com/19413241/223596149-57d5fc83-f88f-487a-b9ae-db0c326a3f5f.png)
 
 
