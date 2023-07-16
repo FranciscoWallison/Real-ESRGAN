@@ -5,7 +5,28 @@ For the original README, refer to [the original repo](https://github.com/xinntao
 I didn't find a good Dockerfile, so I got one from [adryanfrois](https://github.com/adryanfrois/GFPGAN_docker) and updated it. For example, the old version used the CUDA 10 image, but my RTX 3090 requires CUDA 11.
 
 ````
-python3 inference_realesrgan.py -n RealESRGAN_x4plus.pth -i inputs --fp32
+python3 inference_realesrgan.py -n RealESRGAN_x4plus -i inputs --fp32
+python3 inference_realesrgan.py -n RealESRGAN_x4plus_anime_6B -i inputs --fp32
+python3 inference_realesrgan.py -n realesr-general-x4v3 -i inputs --fp32
+
+
+python3 inference_realesrgan.py -n RealESRGAN_x4plus -i inputs --face_enhance  --fp32
+python3 inference_realesrgan.py -n RealESRGAN_x4plus_anime_6B -i inputs --face_enhance --fp32
+python3 inference_realesrgan.py -n realesr-general-x4v3 -i inputs --face_enhance  --fp32
+
+
+python3 inference_realesrgan.py -n 4x_SmolFace_200k.pth -i inputs --fp32
+python3 inference_realesrgan.py -n Art_4xFSMangaV2.pth -i inputs --fp32
+
+
+cd MM-RealSR && python3 inference_mmrealsr.py -opt options/MMRealSRNet_x4.yml --im_path input/ --res_path output/ --model_path experiments/MMRealSRGAN.pth
+
+
+python3 inference_mmrealsr.py -opt options/MMRealSRNet_x4.yml --im_path input/ --res_path output/ --model_path experiments/4x_ArtStation1337_v2.pth
+
+
+
+python3 transer_RRDB_models.py
 ````
 
 ### Exemplos
