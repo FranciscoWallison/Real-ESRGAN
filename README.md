@@ -4,6 +4,9 @@ For the original README, refer to [the original repo](https://github.com/xinntao
 
 I didn't find a good Dockerfile, so I got one from [adryanfrois](https://github.com/adryanfrois/GFPGAN_docker) and updated it. For example, the old version used the CUDA 10 image, but my RTX 3090 requires CUDA 11.
 
+## ESRGAN Models - [Complete List](https://nmkd.de/?esrgan)
+[Base publica](https://icedrive.net/s/43GNBihZyi)
+
 ````
 python3 inference_realesrgan.py -n RealESRGAN_x4plus -i inputs --fp32
 python3 inference_realesrgan.py -n RealESRGAN_x4plus_anime_6B -i inputs --fp32
