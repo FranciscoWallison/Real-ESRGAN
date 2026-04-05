@@ -1,14 +1,25 @@
-version: '3' # vs mais atual
-networks:
-  nlw-network:
-    driver: bridge
-services:
+version: '3.8'
 
+networks:
+  esrgan-network:
+    driver: bridge
+
+services:
   app:
     build: .
-    container_name: config_img
+    container_name: realesrgan_api
     restart: always
     tty: true
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - ./weights:/app/weights
+    environment:
+      - MODEL_NAME=RealESRGAN_x4plus
+      - WEIGHTS_DIR=/app/weights
+    networks:
+      - esrgan-network
     deploy:
       resources:
         reservations:
@@ -16,10 +27,9 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
-    # environment:
-    #   - NVIDIA_VISIBLE_DEVICES=all
-    # command: nvidia-smi
-    ports:
-      - "3333:3333"
-    volumes:
-      - .:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s

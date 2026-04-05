@@ -6,68 +6,43 @@ COPY requirements.txt .
 COPY . .
 
 RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
-    git \
-    python3-pip python3-setuptools python3-dev \
+    git python3-pip python3-setuptools python3-dev \
     libglib2.0-0 libsm6 libxext6 libxrender1 libgl1-mesa-glx ffmpeg \
-    g++ \
-    arch \
-    wget unzip && \
+    g++ wget unzip curl && \
     rm -rf /var/cache/apt/* /var/lib/apt/lists/* && \
-    apt-get autoremove -y && apt-get clean && \
-    pip3 install --no-cache-dir -r requirements.txt && \
-    python3 -m pip install rich && \
-    pip3 install .  && \
-    cd MM-RealSR && \
-    pip3 install --no-cache-dir -r requirements.txt && \
-    pip3 install . && cd ..
+    apt-get autoremove -y && apt-get clean
 
-ENV NVIDIA_VISIBLE_DEVICES all
-ENV NVIDIA_DRIVER_CAPABILITIES all
+# Instala torch/torchvision com CUDA 12.1 do índice oficial PyTorch
+# (evita conflito de nvidia-cublas com basicsr)
+RUN pip3 install --no-cache-dir \
+    torch torchvision \
+    --index-url https://download.pytorch.org/whl/cu121
 
-# RUN apt-get remove --purge nvidia*
-# RUN wget https://developer.download.nvidia.com/compute/cuda/repos/debian11/x86_64/cuda-keyring_1.0-1_all.deb
-# RUN dpkg -i cuda-keyring_1.0-1_all.deb
-# RUN add-apt-repository contrib
-# RUN apt-get update
-# RUN apt-get -y install cuda
+# Instala o restante das dependências (sem torch/torchvision para evitar sobreescrita)
+RUN grep -vE '^torch|^torchvision' requirements.txt > /tmp/requirements_no_torch.txt && \
+    pip3 install --no-cache-dir -r /tmp/requirements_no_torch.txt && \
+    pip3 install --no-cache-dir "fastapi>=0.110.0" "uvicorn[standard]>=0.29.0" python-multipart && \
+    pip3 install --no-cache-dir rich && \
+    pip3 install .
 
-# ENV NVIDIA_CUDA_PPA=https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/
-# ENV NVIDIA_CUDA_PREFERENCES=https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
-# ENV NVIDIA_CUDA_PUBKEY=https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub
+# Patch basicsr: functional_tensor.rgb_to_grayscale foi removido no torchvision 0.16+
+RUN sed -i \
+    's/from torchvision.transforms.functional_tensor import rgb_to_grayscale/from torchvision.transforms.functional import rgb_to_grayscale/' \
+    /usr/local/lib/python3.10/dist-packages/basicsr/data/degradations.py
 
-# # Add NVIDIA Developers 3rd-Party PPA
-# RUN wget ${NVIDIA_CUDA_PREFERENCES} -O /etc/apt/preferences.d/nvidia-cuda
-# RUN apt-key adv --fetch-keys ${NVIDIA_CUDA_PUBKEY}
-# RUN echo "deb ${NVIDIA_CUDA_PPA} /" |  tee /etc/apt/sources.list.d/nvidia-cuda.list
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
-# # Install development tools
-# RUN apt-get update
-# RUN apt-get install -y cuda
-
-# Ninja
+# Ninja (necessário para compilações do basicsr)
 RUN wget https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-linux.zip && \
     unzip ninja-linux.zip -d /usr/local/bin/ && \
     update-alternatives --install /usr/bin/ninja ninja /usr/local/bin/ninja 1 --force && \
-    wget https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.2.4/RealESRGAN_x4plus_anime_6B.pth -P weights && \
-    wget https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesr-general-x4v3.pth -P weights  && \
-    wget https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesr-general-wdn-x4v3.pth -P weights  && \
-    cd MM-RealSR && \
-    wget "https://github.com/TencentARC/MM-RealSR/releases/download/v1.0.0/MMRealSRGAN.pth" -P experiments && \
-    python3 setup.py develop  && \
-    cd .. && \
-    python3 -m pip install --upgrade pip && \
-    pip3 install --no-cache-dir torch>=1.13 opencv-python>=4.7 && \
-    pip3 install --no-cache-dir basicsr facexlib realesrgan && \
-    pip3 install --no-cache-dir gfpgan && \
-    python3 setup.py develop
+    rm ninja-linux.zip
 
+RUN mkdir -p /app/weights /experiments/pretrained_models
 
-# weights
-RUN mkdir -p /experiments/pretrained_models
-#RUN wget https://github.com/TencentARC/GFPGAN/releases/download/v0.2.0/GFPGANCleanv1-NoCE-C2.pth \
-#        -P experiments/pretrained_models &&\
-#    wget https://github.com/TencentARC/GFPGAN/releases/download/v0.1.0/GFPGANv1.pth \
-#        -P experiments/pretrained_models
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# CMD ["python3", "inference_realesrgan.py", "-i", "/inputs", "-o", "/results", "-n", ""]
-CMD [ "bash" ]
+EXPOSE 8000
+CMD ["/entrypoint.sh"]
