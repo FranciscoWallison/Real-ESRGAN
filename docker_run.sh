@@ -1,1 +1,0 @@
-docker run --rm -it --gpus all --name gfpgan --volume $HOME/Documents/Pictures/inputs:/inputs --volume $HOME/Documents/Pictures/results:/results --volume /weights/:/weights/ --volume /pretrained_models:/experiments/pretrained_models akitaonrails/real-esrgan:latest $@
