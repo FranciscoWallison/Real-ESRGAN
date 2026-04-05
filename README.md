@@ -42,7 +42,14 @@ Resposta esperada:
 ## API
 
 ### `GET /health`
-Verifica se o serviço está rodando e retorna informações da GPU.
+Verifica status do serviço, GPU e modelos carregados.
+
+### `GET /models`
+Lista todos os modelos disponíveis — modelos conhecidos + qualquer `.pth` colocado em `weights/`.
+
+```bash
+curl http://localhost:8000/models
+```
 
 ### `POST /upscale`
 Recebe uma imagem e retorna a versão com upscaling aplicado.
@@ -50,39 +57,69 @@ Recebe uma imagem e retorna a versão com upscaling aplicado.
 **Parâmetros (query string):**
 | Parâmetro | Tipo | Padrão | Descrição |
 |-----------|------|--------|-----------|
-| `outscale` | float | `4.0` | Fator de escala (1–8x) |
-| `tile` | int | `0` | Tamanho do tile para GPUs com pouca VRAM (ex: `512`, `256`). `0` = desabilitado |
+| `model` | string | `RealESRGAN_x4plus` | Nome do modelo (ver `/models`) |
+| `outscale` | float | `4.0` | Fator de escala final (1–8x) |
+| `tile` | int | `0` | Tile size para GPUs com pouca VRAM (`512`, `256`). `0` = desabilitado |
 
-**Exemplo com curl:**
+**Exemplos:**
 ```bash
-curl -X POST "http://localhost:8000/upscale?outscale=4" \
-  -F "file=@inputs/minha_imagem.jpg" \
-  --output resultado_4x.jpg
-```
+# Foto geral — 4x
+curl -X POST "http://localhost:8000/upscale" \
+  -F "file=@foto.jpg" --output foto_4x.jpg
 
-**Exemplo com tile para imagens grandes:**
-```bash
+# Pixel art / anime — melhor modelo para sprites
+curl -X POST "http://localhost:8000/upscale?model=RealESRGAN_x4plus_anime_6B" \
+  -F "file=@sprite.png" --output sprite_4x.png
+
+# Modelo customizado (coloque o .pth em weights/)
+curl -X POST "http://localhost:8000/upscale?model=4x-UltraSharp" \
+  -F "file=@imagem.png" --output resultado.png
+
+# Imagem grande com pouca VRAM
 curl -X POST "http://localhost:8000/upscale?outscale=4&tile=512" \
-  -F "file=@inputs/imagem_grande.png" \
-  --output resultado.png
+  -F "file=@imagem_grande.png" --output resultado.png
 ```
 
-Documentação interativa disponível em: `http://localhost:8000/docs`
+Documentação interativa: `http://localhost:8000/docs`
 
 ---
 
 ## Modelos disponíveis
 
-Defina o modelo pelo `MODEL_NAME` no `docker-compose.yml` ou na variável de ambiente.
+Os três modelos principais são baixados automaticamente no startup. O modelo padrão é definido por `MODEL_NAME` no `docker-compose.yml`.
 
-| MODEL_NAME | Uso recomendado | Escala |
-|---|---|---|
-| `RealESRGAN_x4plus` | Fotos reais, uso geral *(padrão)* | 4x |
-| `RealESRGAN_x4plus_anime_6B` | Ilustrações e anime | 4x |
-| `RealESRGAN_x2plus` | Fotos reais em 2x | 2x |
-| `realesr-general-x4v3` | Geral com denoising | 4x |
+| Modelo | Uso recomendado | Escala | Auto-download |
+|---|---|---|---|
+| `RealESRGAN_x4plus` | Fotos reais, uso geral *(padrão)* | 4x | ✅ |
+| `RealESRGAN_x4plus_anime_6B` | Anime, ilustrações, **pixel art** | 4x | ✅ |
+| `RealESRGAN_x2plus` | Fotos reais em 2x | 2x | ✅ |
+| `realesr-general-x4v3` | Geral com denoising | 4x | manual |
 
-Os pesos são baixados automaticamente na primeira execução para `./weights/`. Monte um volume para reutilizá-los entre rebuilds.
+### Modelos customizados (pixel art e outros)
+
+Qualquer `.pth` da comunidade colocado em `weights/` fica disponível automaticamente via API. A arquitetura é detectada automaticamente.
+
+```bash
+# Exemplo: 4x-UltraSharp (ótimo para arte digital e pixel art)
+wget "https://huggingface.co/Kim2091/UltraSharp/resolve/main/4x-UltraSharp.pth" -P weights/
+
+# Após colocar o arquivo, já está disponível:
+curl -X POST "http://localhost:8000/upscale?model=4x-UltraSharp" \
+  -F "file=@sprite.png" --output resultado.png
+```
+
+Busque mais modelos em: [OpenModelDB](https://openmodeldb.info) — filtre por `pixel art`, `anime` ou `photography`.
+
+### Qual modelo usar para pixel art de jogos?
+
+| Caso | Modelo recomendado |
+|---|---|
+| Sprites e pixel art | `RealESRGAN_x4plus_anime_6B` |
+| Arte digital / linhas nítidas | `4x-UltraSharp` (download manual) |
+| Screenshot de jogo 3D | `RealESRGAN_x4plus` |
+| Foto com rosto | `RealESRGAN_x4plus` + CodeFormer |
+
+Os pesos ficam em `./weights/` — o volume garante que sobrevivem entre rebuilds.
 
 ---
 
@@ -161,27 +198,6 @@ docker compose exec app python3 inference_realesrgan.py \
 # Vídeo
 docker compose exec app python3 inference_realesrgan_video.py \
   -i inputs/video.mp4 -o results/video_upscaled.mp4
-```
-
----
-
-## Integração com server-OTA
-
-Este serviço pode ser usado como backend de upscaling para o projeto [server-OTA](../server-OTA). O `server-OTA` expõe `/api/upscale` que faz proxy para este serviço.
-
-Para subir a stack completa:
-```bash
-cd ../server-OTA
-docker compose up -d
-# server-OTA em localhost:3000
-# Real-ESRGAN em localhost:8000
-```
-
-Endpoint via server-OTA:
-```bash
-curl -X POST "http://localhost:3000/api/upscale?outscale=4" \
-  -F "file=@imagem.jpg" \
-  --output resultado.jpg
 ```
 
 ---
